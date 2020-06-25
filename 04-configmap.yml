@@ -1,0 +1,32 @@
+apiVersion: v1
+data:
+  ldap-group-sync.yaml: |
+    kind: LDAPSyncConfig
+    apiVersion: v1
+    url: ldap://domainserver.contoso.domain:389
+    insecure: true
+    bindDN: "CN=Service Account for OPC LDAP,OU=Service,OU=Accounts,DC=contoso,DC=domain"
+    bindPassword:
+      file: "/etc/secrets/bind_password"
+    activeDirectory:
+      usersQuery:
+          baseDN: "DC=contoso,DC=domain"
+          scope: sub
+          derefAliases: always
+          pageSize: 0
+          filter: (objectclass=user)
+      userNameAttributes: [ sAMAccountName ]
+      groupMembershipAttributes: [ memberOf ]
+
+    groupUIDNameMapping:
+      "CN=GG.OCP.Administrators,OU=GLOBAL,OU=Groups,DC=contoso,DC=domain": admins
+      "CN=GG.OCP.Users,OU=GLOBAL,OU=Groups,DC=contoso,DC=domain": users
+      "CN=GG.OCP.Developers,OU=GLOBAL,OU=Groups,DC=contoso,DC=domain": devops
+  whitelist.txt: |
+    CN=GG.OCP.Administrators,OU=GLOBAL,OU=Groups,DC=contoso,DC=domain
+    CN=GG.OCP.Developers,OU=GLOBAL,OU=Groups,DC=contoso,DC=domain
+    CN=GG.OCP.Users,OU=GLOBAL,OU=Groups,DC=contoso,DC=domain
+kind: ConfigMap
+metadata:
+  name: ldap-config
+  namespace: ldap-sync

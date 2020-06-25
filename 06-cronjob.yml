@@ -1,0 +1,57 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  creationTimestamp: null
+  labels:
+    template: cronjob-ldap-group-sync
+  name: cronjob-ldap-group-sync
+  namespace: ldap-sync
+  selfLink: /apis/batch/v1beta1/namespaces/ldap-sync/cronjobs/cronjob-ldap-group-sync
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      template:
+        metadata:
+          creationTimestamp: null
+        spec:
+          activeDeadlineSeconds: 500
+          containers:
+          - command:
+            - /bin/bash
+            - -c
+            - oc adm groups sync --sync-config=/etc/config/ldap-group-sync.yaml --confirm --whitelist=/etc/config/whitelist.txt
+            image: registry.access.redhat.com/openshift3/ose-cli:v3.11
+            imagePullPolicy: IfNotPresent
+            name: cronjob-ldap-group-sync
+            resources: {}
+            terminationMessagePath: /dev/termination-log
+            terminationMessagePolicy: File
+            volumeMounts:
+            - mountPath: /etc/config
+              name: ldap-sync-volume
+            - mountPath: /etc/secrets
+              name: ldap-bind-password
+          dnsPolicy: ClusterFirst
+          restartPolicy: Never
+          schedulerName: default-scheduler
+          securityContext: {}
+          serviceAccount: ldap-group-syncer
+          serviceAccountName: ldap-group-syncer
+          terminationGracePeriodSeconds: 30
+          volumes:
+          - configMap:
+              defaultMode: 420
+              name: ldap-config
+            name: ldap-sync-volume
+          - name: ldap-bind-password
+            secret:
+              defaultMode: 420
+              secretName: ldap-bind-password
+  schedule: '*/15 * * * *'
+  startingDeadlineSeconds: 60
+  successfulJobsHistoryLimit: 5
+  suspend: false
+status: {}
