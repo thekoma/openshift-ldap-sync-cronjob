@@ -1,0 +1,1 @@
+# oepnshift-ldap-sync-gronjob
